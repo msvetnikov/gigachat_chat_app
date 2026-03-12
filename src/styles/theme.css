@@ -1,0 +1,60 @@
+:root {
+    color-scheme: light;
+    --font-sans: "Segoe UI", "Trebuchet MS", sans-serif;
+    --color-bg: #f4f7fb;
+    --color-bg-elevated: #eaf0f8;
+    --color-surface: rgba(255, 255, 255, 0.82);
+    --color-text: #112031;
+    --color-text-muted: #607089;
+    --color-border: rgba(96, 112, 137, 0.18);
+    --color-border-strong: rgba(96, 112, 137, 0.45);
+    --color-accent: #2061f6;
+    --color-accent-strong: #0f43bd;
+    --shadow-soft: 0 24px 60px rgba(17, 32, 49, 0.12);
+}
+
+[data-theme='dark'] {
+    color-scheme: dark;
+    --color-bg: #0d1420;
+    --color-bg-elevated: #162030;
+    --color-surface: rgba(18, 26, 39, 0.86);
+    --color-text: #f2f6fb;
+    --color-text-muted: #97a7bb;
+    --color-border: rgba(151, 167, 187, 0.18);
+    --color-border-strong: rgba(151, 167, 187, 0.4);
+    --color-accent: #57a1ff;
+    --color-accent-strong: #2f73dc;
+    --shadow-soft: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+img {
+    max-width: 100%;
+}

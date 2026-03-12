@@ -1,0 +1,28 @@
+.state {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 12px;
+    min-height: 280px;
+    padding: 24px;
+    text-align: center;
+}
+
+.icon {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(32, 97, 246, 0.2), rgba(32, 97, 246, 0.08));
+    font-size: 1.6rem;
+}
+
+.state h3,
+.state p {
+    margin: 0;
+}
+
+.state p {
+    color: var(--color-text-muted);
+}

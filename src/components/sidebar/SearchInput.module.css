@@ -1,0 +1,28 @@
+.wrapper {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: var(--color-bg-elevated);
+}
+
+.icon {
+    color: var(--color-text-muted);
+    font-size: 1rem;
+}
+
+.input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+}
+
+.input::placeholder {
+    color: var(--color-text-muted);
+}
