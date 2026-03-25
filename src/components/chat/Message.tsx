@@ -28,7 +28,7 @@ export function Message({ message, variant }: MessageProps) {
 
             <div className={styles.bubble}>
                 <div className={styles.metaRow}>
-                    <strong>{message.author}</strong>
+                    <strong>{variant === 'user' ? 'Вы' : 'GigaChat'}</strong>
                     <span>{message.timestamp}</span>
                 </div>
                 <div className={styles.markdown}>

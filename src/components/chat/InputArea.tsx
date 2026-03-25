@@ -1,15 +1,15 @@
-import { useLayoutEffect, useRef, type KeyboardEventHandler } from 'react';
+import { useLayoutEffect, useRef, useState, type KeyboardEventHandler } from 'react';
 import { Button } from '../ui/Button';
 import styles from './InputArea.module.css';
 
 interface InputAreaProps {
-    value: string;
-    onChange: (value: string) => void;
-    onSend: () => void;
+    isLoading?: boolean;
+    onSend: (text: string) => void;
     onStop: () => void;
 }
 
-export function InputArea({ value, onChange, onSend, onStop }: InputAreaProps) {
+export function InputArea({ isLoading, onSend, onStop }: InputAreaProps) {
+    const [text, setText] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     useLayoutEffect(() => {
@@ -23,36 +23,45 @@ export function InputArea({ value, onChange, onSend, onStop }: InputAreaProps) {
         const lineHeight = 24;
         const maxHeight = lineHeight * 5;
         element.style.height = `${Math.min(element.scrollHeight, maxHeight)}px`;
-    }, [value]);
+    }, [text]);
 
     const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
 
-            if (value.trim()) {
-                onSend();
+            if (text.trim() && !isLoading) {
+                onSend(text.trim());
+                setText('');
             }
+        }
+    };
+
+    const handleSendClick = () => {
+        if (text.trim() && !isLoading) {
+            onSend(text.trim());
+            setText('');
         }
     };
 
     return (
         <div className={styles.wrapper}>
-            <button aria-label="Прикрепить изображение" className={styles.iconButton} type="button">
+            <button aria-label="Прикрепить изображение" className={styles.iconButton} type="button" disabled={isLoading}>
                 🖼
             </button>
 
             <textarea
                 className={styles.textarea}
-                onChange={(event) => onChange(event.target.value)}
+                onChange={(event) => setText(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Введите сообщение..."
                 ref={textareaRef}
                 rows={1}
-                value={value}
+                value={text}
+                disabled={isLoading}
             />
 
             <div className={styles.actions}>
-                <Button disabled={!value.trim()} onClick={onSend} variant="primary">
+                <Button disabled={!text.trim() || isLoading} onClick={handleSendClick} variant="primary">
                     Отправить
                 </Button>
                 <Button onClick={onStop} variant="ghost">

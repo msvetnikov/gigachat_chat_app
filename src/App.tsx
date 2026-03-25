@@ -9,7 +9,6 @@ export default function App() {
     const [theme, setTheme] = useState<ThemeMode>('light');
     const [activeChatId, setActiveChatId] = useState(mockChats[0]?.id ?? '');
     const [searchValue, setSearchValue] = useState('');
-    const [draftValue, setDraftValue] = useState('Подготовь краткий summary этой переписки');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [settings, setSettings] = useState<SettingsValues>(defaultSettings);
@@ -48,20 +47,16 @@ export default function App() {
             activeChatId={currentChat?.id ?? ''}
             chats={visibleChats}
             currentChat={currentChat}
-            draftValue={draftValue}
             isSettingsOpen={isSettingsOpen}
             isSidebarOpen={isSidebarOpen}
-            isTypingVisible={Boolean(currentChat?.messages.length)}
             searchValue={searchValue}
             settings={settings}
             theme={theme}
-            onChangeDraft={setDraftValue}
             onCloseSettings={() => setIsSettingsOpen(false)}
             onDeleteChat={() => undefined}
             onEditChat={() => undefined}
             onNewChat={() => {
                 setActiveChatId('');
-                setDraftValue('');
                 setIsSidebarOpen(false);
             }}
             onOpenSettings={() => setIsSettingsOpen(true)}
@@ -72,7 +67,6 @@ export default function App() {
                 setActiveChatId(chatId);
                 setIsSidebarOpen(false);
             }}
-            onSend={() => undefined}
             onStop={() => undefined}
             onToggleSidebar={() => setIsSidebarOpen((value) => !value)}
             onToggleTheme={() =>

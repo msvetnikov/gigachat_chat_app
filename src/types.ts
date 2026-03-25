@@ -15,8 +15,7 @@ export type MessageVariant = 'user' | 'assistant';
 
 export interface MessageData {
     id: string;
-    author: string;
-    variant: MessageVariant;
+    role: 'user' | 'assistant';
     content: string;
     timestamp: string;
 }

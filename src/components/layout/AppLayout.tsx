@@ -8,14 +8,11 @@ interface AppLayoutProps {
     chats: ChatData[];
     activeChatId: string;
     currentChat: ChatData | null;
-    draftValue: string;
     isSettingsOpen: boolean;
     isSidebarOpen: boolean;
-    isTypingVisible: boolean;
     searchValue: string;
     settings: SettingsValues;
     theme: ThemeMode;
-    onChangeDraft: (value: string) => void;
     onCloseSettings: () => void;
     onDeleteChat: (chatId: string) => void;
     onEditChat: (chatId: string) => void;
@@ -25,7 +22,6 @@ interface AppLayoutProps {
     onSaveSettings: (settings: SettingsValues) => void;
     onSearchChange: (value: string) => void;
     onSelectChat: (chatId: string) => void;
-    onSend: () => void;
     onStop: () => void;
     onToggleSidebar: () => void;
     onToggleTheme: () => void;
@@ -35,14 +31,11 @@ export function AppLayout({
     chats,
     activeChatId,
     currentChat,
-    draftValue,
     isSettingsOpen,
     isSidebarOpen,
-    isTypingVisible,
     searchValue,
     settings,
     theme,
-    onChangeDraft,
     onCloseSettings,
     onDeleteChat,
     onEditChat,
@@ -52,7 +45,6 @@ export function AppLayout({
     onSaveSettings,
     onSearchChange,
     onSelectChat,
-    onSend,
     onStop,
     onToggleSidebar,
     onToggleTheme,
@@ -94,11 +86,7 @@ export function AppLayout({
             <main className={styles.content}>
                 <ChatWindow
                     chat={currentChat}
-                    draftValue={draftValue}
-                    isTypingVisible={isTypingVisible}
-                    onChangeDraft={onChangeDraft}
                     onOpenSettings={onOpenSettings}
-                    onSend={onSend}
                     onStop={onStop}
                 />
             </main>
