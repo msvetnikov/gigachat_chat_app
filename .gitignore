@@ -1,8 +1,8 @@
-# Сюда Git не должен смотреть
 node_modules
 dist
 dist-ssr
 *.local
+.env
 
 # Логи
 npm-debug.log*

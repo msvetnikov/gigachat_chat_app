@@ -26,9 +26,229 @@
     text-transform: uppercase;
 }
 
-.title {
+.headerTitle {
     margin: 0;
     font-size: 1.75rem;
+}
+
+.button {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    font: inherit;
+    font-weight: 600;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.primaryButton {
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
+    color: white;
+    box-shadow: 0 12px 24px rgba(32, 97, 246, 0.25);
+}
+
+.ghostButton {
+    border-color: var(--color-border);
+    background: var(--color-bg-elevated);
+    color: var(--color-text);
+}
+
+.buttonIcon {
+    font-size: 1rem;
+}
+
+.searchWrapper {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: var(--color-bg-elevated);
+}
+
+.searchIcon {
+    color: var(--color-text-muted);
+    font-size: 1rem;
+}
+
+.searchInput {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+}
+
+.searchInput::placeholder {
+    color: var(--color-text-muted);
+}
+
+.list {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    border: 1px solid transparent;
+    border-radius: 18px;
+    background: transparent;
+    color: var(--color-text);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.item:hover {
+    background: var(--color-bg-elevated);
+    border-color: var(--color-border);
+    transform: translateY(-1px);
+}
+
+.active {
+    border-color: rgba(32, 97, 246, 0.28);
+    background: linear-gradient(135deg, rgba(32, 97, 246, 0.12), transparent);
+}
+
+.row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.chatTitle {
+    min-width: 0;
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.date {
+    margin-left: auto;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.preview {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.actions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.item:hover .actions,
+.item:focus-visible .actions {
+    opacity: 1;
+}
+
+.actionButton {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+}
+
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.modalBackdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.modal {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 420px);
+    padding: 22px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+    display: grid;
+    gap: 16px;
+}
+
+.modalTitle {
+    margin: 0;
+}
+
+.modalText {
+    margin: 0;
+    color: var(--color-text-muted);
+}
+
+.modalField {
+    display: grid;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.modalInput {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--color-bg-elevated);
+    color: var(--color-text);
+    font: inherit;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 @media (max-width: 900px) {

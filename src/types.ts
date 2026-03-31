@@ -13,20 +13,40 @@ export type ModelOption =
 
 export type MessageVariant = 'user' | 'assistant';
 
-export interface MessageData {
+export type MessageRole = 'system' | 'user' | 'assistant';
+
+export interface Message {
     id: string;
-    role: 'user' | 'assistant';
+    role: MessageRole;
     content: string;
     timestamp: string;
 }
 
-export interface ChatData {
+export interface Chat {
     id: string;
     title: string;
     lastMessageDate: string;
     preview: string;
-    messages: MessageData[];
+    messages: Message[];
 }
+
+export interface ChatState {
+    chats: Chat[];
+    activeChatId: string;
+    isLoading: boolean;
+    error: string | null;
+}
+
+export type ChatAction =
+    | { type: 'INIT'; payload: { chats: Chat[]; activeChatId: string } }
+    | { type: 'CREATE_CHAT'; payload: Chat }
+    | { type: 'SET_ACTIVE_CHAT'; payload: string }
+    | { type: 'UPDATE_CHAT'; payload: Chat }
+    | { type: 'DELETE_CHAT'; payload: string }
+    | { type: 'ADD_MESSAGE'; payload: { chatId: string; message: Message } }
+    | { type: 'UPDATE_MESSAGE'; payload: { chatId: string; messageId: string; content: string } }
+    | { type: 'SET_LOADING'; payload: boolean }
+    | { type: 'SET_ERROR'; payload: string | null };
 
 export interface SettingsValues {
     model: ModelOption;
