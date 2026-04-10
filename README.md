@@ -71,3 +71,14 @@ macOS / Linux:
 NODE_TLS_REJECT_UNAUTHORIZED=0 npm run dev:api
 npm run dev
 ```
+
+## Тесты
+
+```bash
+npm test
+```
+
+Покрытие:
+- unit-тесты на reducer;
+- компонентные тесты для `InputArea`, `Message`, `Sidebar`;
+- тесты на персистентность `localStorage`.

@@ -41,7 +41,7 @@ interface MessageProps {
     variant: MessageVariant;
 }
 
-function Message({ message, variant }: MessageProps) {
+export function Message({ message, variant }: MessageProps) {
     const [copied, setCopied] = useState(false);
     const timeoutRef = useRef<number | null>(null);
 

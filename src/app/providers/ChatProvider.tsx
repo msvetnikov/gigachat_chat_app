@@ -48,14 +48,14 @@ const createEmptyChat = (): Chat => ({
     messages: [],
 });
 
-const initialState: ChatState = {
+export const initialState: ChatState = {
     chats: [],
     activeChatId: '',
     isLoading: false,
     error: null,
 };
 
-const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
+export const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
     switch (action.type) {
         case 'INIT':
             return {

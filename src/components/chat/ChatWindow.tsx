@@ -70,7 +70,7 @@ interface InputAreaProps {
     onStop: () => void;
 }
 
-function InputArea({ isLoading, onSend, onStop }: InputAreaProps) {
+export function InputArea({ isLoading, onSend, onStop }: InputAreaProps) {
     const [text, setText] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
