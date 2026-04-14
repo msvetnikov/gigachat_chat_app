@@ -1,8 +1,16 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEventHandler } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEventHandler } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useChat } from '../../app/providers/ChatProvider';
-import { MessageList } from './MessageList';
+import { ErrorBoundary } from '../ErrorBoundary';
 import styles from './ChatWindow.module.css';
+
+const LazyMessageList = lazy(() =>
+    import('./MessageList').then((module) => ({ default: module.MessageList }))
+);
+
+const LazySettingsPanel = lazy(() =>
+    import('../SettingsPanel').then((module) => ({ default: module.SettingsPanel }))
+);
 
 export function ChatWindow() {
     const navigate = useNavigate();
@@ -16,8 +24,10 @@ export function ChatWindow() {
         isLoading,
         selectChat,
         sendMessage,
+        retryLastMessage,
         stopGeneration,
     } = useChat();
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const chat = useMemo(() => {
         if (params.id) {
@@ -38,6 +48,17 @@ export function ChatWindow() {
         }
     }, [params.id, chat, navigate, activeChatId, selectChat, isHydrated]);
 
+    const handleSend = useCallback(
+        async (text: string) => {
+            await sendMessage(text);
+        },
+        [sendMessage]
+    );
+
+    const handleStop = useCallback(() => {
+        stopGeneration();
+    }, [stopGeneration]);
+
     return (
         <section className={styles.window}>
             <header className={styles.header}>
@@ -45,21 +66,39 @@ export function ChatWindow() {
                     <p className={styles.eyebrow}>Текущий диалог</p>
                     <h2 className={styles.title}>{chat?.title ?? 'Новый чат'}</h2>
                 </div>
+                <button
+                    className={[styles.button, styles.ghostButton].join(' ')}
+                    onClick={() => setIsSettingsOpen(true)}
+                    type="button"
+                >
+                    Настройки
+                </button>
             </header>
 
-            {error ? <ErrorMessage message={error} /> : null}
+            <ErrorBoundary>
+                {chat?.messages.length ? (
+                    <Suspense fallback={<MessageListFallback />}>
+                        <LazyMessageList isTypingVisible={isLoading} messages={chat.messages} />
+                    </Suspense>
+                ) : (
+                    <EmptyState />
+                )}
+            </ErrorBoundary>
 
-            {chat?.messages.length ? (
-                <MessageList isTypingVisible={isLoading} messages={chat.messages} />
-            ) : (
-                <EmptyState />
-            )}
+            <div>
+                <InputArea
+                    isLoading={isLoading}
+                    onSend={handleSend}
+                    onStop={handleStop}
+                />
+                {error ? (
+                    <ErrorMessage message={error} onRetry={retryLastMessage} />
+                ) : null}
+            </div>
 
-            <InputArea
-                isLoading={isLoading}
-                onSend={sendMessage}
-                onStop={stopGeneration}
-            />
+            <Suspense fallback={null}>
+                <LazySettingsPanel isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+            </Suspense>
         </section>
     );
 }
@@ -153,13 +192,27 @@ function EmptyState() {
 
 interface ErrorMessageProps {
     message: string;
+    onRetry?: () => void;
 }
 
-function ErrorMessage({ message }: ErrorMessageProps) {
+function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
     return (
         <div className={styles.errorMessage} role="alert">
             <span>⚠</span>
             <span>{message}</span>
+            {onRetry ? (
+                <button className={[styles.button, styles.ghostButton].join(' ')} onClick={onRetry} type="button">
+                    Повторить
+                </button>
+            ) : null}
+        </div>
+    );
+}
+
+function MessageListFallback() {
+    return (
+        <div className={styles.messageFallback}>
+            Загрузка сообщений...
         </div>
     );
 }

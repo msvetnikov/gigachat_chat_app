@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChat } from '../../app/providers/ChatProvider';
 import type { Chat } from '../../types';
@@ -37,19 +37,19 @@ export function Sidebar({
         });
     }, [chats, searchValue]);
 
-    const handleNewChat = () => {
+    const handleNewChat = useCallback(() => {
         const chatId = createChat();
         navigate(`/chat/${chatId}`);
         onClose();
-    };
+    }, [createChat, navigate, onClose]);
 
-    const handleSelectChat = (chatId: string) => {
+    const handleSelectChat = useCallback((chatId: string) => {
         selectChat(chatId);
         navigate(`/chat/${chatId}`);
         onClose();
-    };
+    }, [navigate, onClose, selectChat]);
 
-    const handleEditChat = (chatId: string) => {
+    const handleEditChat = useCallback((chatId: string) => {
         const current = chats.find((chat) => chat.id === chatId);
         if (!current) {
             return;
@@ -57,20 +57,20 @@ export function Sidebar({
         setDraftTitle(current.title);
         setActiveModalChatId(chatId);
         setModalMode('rename');
-    };
+    }, [chats]);
 
-    const handleDeleteChat = (chatId: string) => {
+    const handleDeleteChat = useCallback((chatId: string) => {
         setActiveModalChatId(chatId);
         setModalMode('delete');
-    };
+    }, []);
 
-    const closeModal = () => {
+    const closeModal = useCallback(() => {
         setModalMode(null);
         setActiveModalChatId(null);
         setDraftTitle('');
-    };
+    }, []);
 
-    const handleRenameConfirm = () => {
+    const handleRenameConfirm = useCallback(() => {
         if (!activeModalChatId) {
             return;
         }
@@ -79,9 +79,9 @@ export function Sidebar({
             renameChat(activeModalChatId, nextTitle);
         }
         closeModal();
-    };
+    }, [activeModalChatId, closeModal, draftTitle, renameChat]);
 
-    const handleDeleteConfirm = () => {
+    const handleDeleteConfirm = useCallback(() => {
         if (!activeModalChatId) {
             return;
         }
@@ -90,7 +90,7 @@ export function Sidebar({
             navigate('/');
         }
         closeModal();
-    };
+    }, [activeChatId, activeModalChatId, closeModal, deleteChat, navigate]);
 
     return (
         <aside className={[styles.sidebar, isOpen ? styles.open : ''].join(' ')}>
@@ -204,7 +204,7 @@ interface ChatItemProps {
     onSelect: (chatId: string) => void;
 }
 
-function ChatItem({ chat, isActive, onDelete, onEdit, onSelect }: ChatItemProps) {
+const ChatItem = memo(function ChatItem({ chat, isActive, onDelete, onEdit, onSelect }: ChatItemProps) {
     const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
@@ -253,7 +253,9 @@ function ChatItem({ chat, isActive, onDelete, onEdit, onSelect }: ChatItemProps)
             </div>
         </div>
     );
-}
+});
+
+ChatItem.displayName = 'ChatItem';
 
 interface SearchInputProps {
     value: string;

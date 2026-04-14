@@ -8,7 +8,8 @@
         "dev:api": "node server/gigachat-proxy.js",
         "build": "tsc -b && vite build",
         "preview": "vite preview",
-        "test": "vitest"
+        "test": "vitest",
+        "analyze": "npx vite-bundle-visualizer"
     },
     "dependencies": {
         "dotenv": "^16.4.5",

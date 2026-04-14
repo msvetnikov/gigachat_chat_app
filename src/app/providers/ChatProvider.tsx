@@ -163,6 +163,7 @@ interface ChatContextValue extends ChatState {
     deleteChat: (chatId: string) => void;
     renameChat: (chatId: string, title: string) => void;
     sendMessage: (text: string) => Promise<void>;
+    retryLastMessage: () => Promise<void>;
     stopGeneration: () => void;
     getChatById: (chatId: string) => Chat | null;
 }
@@ -191,6 +192,7 @@ export function ChatProvider({
     const [state, dispatch] = useReducer(chatReducer, initialState);
     const stateRef = useRef(state);
     const abortRef = useRef<AbortController | null>(null);
+    const lastUserMessageRef = useRef('');
     const [isHydrated, setIsHydrated] = useState(false);
 
     useEffect(() => {
@@ -254,6 +256,8 @@ export function ChatProvider({
             if (!trimmed || stateRef.current.isLoading) {
                 return;
             }
+
+            lastUserMessageRef.current = trimmed;
 
             let chat = stateRef.current.chats.find(
                 (item) => item.id === stateRef.current.activeChatId
@@ -371,6 +375,15 @@ export function ChatProvider({
         [enableStreaming, maxTokens, model, systemPrompt, temperature, topP]
     );
 
+    const retryLastMessage = useCallback(async () => {
+        const lastMessage = lastUserMessageRef.current;
+        if (!lastMessage) {
+            return;
+        }
+
+        await sendMessage(lastMessage);
+    }, [sendMessage]);
+
     const value: ChatContextValue = {
         ...state,
         isHydrated,
@@ -380,6 +393,7 @@ export function ChatProvider({
         deleteChat,
         renameChat,
         sendMessage,
+        retryLastMessage,
         stopGeneration,
         getChatById,
     };

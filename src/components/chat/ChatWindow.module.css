@@ -33,14 +33,19 @@
 
 .errorMessage {
     display: inline-flex;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
-    margin: 0 24px;
+    margin: 0 24px 20px;
     padding: 10px 12px;
     border: 1px solid rgba(204, 62, 62, 0.22);
     border-radius: 14px;
     background: rgba(204, 62, 62, 0.12);
     color: #c52d2d;
+}
+
+.messageFallback {
+    padding: 24px;
+    color: var(--color-text-muted);
 }
 
 .emptyState {

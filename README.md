@@ -1,54 +1,76 @@
 # GigaChat UI Shell
 
-Учебный проект — статичная UI-оболочка чат-приложения на React + TypeScript 
+Учебный проект — UI-оболочка чат-приложения на React + TypeScript.
 
-**Стек:** React 19 · TypeScript 5 · Vite 7 · CSS Modules · react-markdown
+## Демо
 
-## Быстрый запуск
+- Публичная ссылка: добавить после деплоя.
+- Скриншоты/видео: добавить после деплоя.
 
-```bash
-npm install
-```
+## Стек
 
-## Переменные окружения
+- React 19
+- TypeScript 5
+- Vite 7
+- React Router 6
+- Context + `useReducer`
+- CSS Modules
+- react-markdown + rehype-prism-plus
+- Vitest + React Testing Library
 
-Создайте папку `.env` в корне проекта и добавьте туда:
+## Запуск локально
 
-```bash
-GIGACHAT_AUTH_KEY=ваш_authorization_key
-GIGACHAT_SCOPE=GIGACHAT_API_PERS
-GIGACHAT_OAUTH_URL=https://ngw.devices.sberbank.ru:9443/api/v2/oauth
-GIGACHAT_API_URL=https://gigachat.devices.sberbank.ru/api/v1
-GIGACHAT_PROXY_PORT=8787
-```
-
-## Запуск
-
-1. Установите зависимости:
+1. Клонируйте репозиторий.
+2. Установите зависимости:
 
 ```bash
 npm install
 ```
 
-Устанавливаются все npm-зависимости для клиента и proxy-сервера.
-
-2. Запустите proxy-сервер в одном терминале:
+3. Создайте [.env](.env) в корне проекта по образцу [.env.example](.env.example).
+4. Запустите proxy-сервер в одном терминале:
 
 ```bash
 npm run dev:api
 ```
 
-- поднимается локальный proxy, который получает OAuth-токен по `GIGACHAT_AUTH_KEY` и кэширует его;
-- прокси прокидывает запросы к GigaChat API, скрывая ключ и обходя проблемы TLS на стороне браузера;
-- клиент обращается только к локальному proxy, а не к внешнему API напрямую.
-
-3. Запустите Vite во втором терминале:
+5. Запустите Vite во втором терминале:
 
 ```bash
 npm run dev
 ```
-- стартует дев-сервер Vite для React-приложения.
 
+Откройте URL из вывода Vite (например, http://localhost:5174).
+
+## Env
+
+| Переменная | Назначение | Где используется |
+| --- | --- | --- |
+| `GIGACHAT_AUTH_KEY` | ключ авторизации GigaChat для получения OAuth-токена | сервер (proxy) |
+| `GIGACHAT_SCOPE` | скоуп доступа | сервер (proxy) |
+| `GIGACHAT_OAUTH_URL` | URL получения OAuth-токена | сервер (proxy) |
+| `GIGACHAT_API_URL` | базовый URL API GigaChat | сервер (proxy) |
+| `GIGACHAT_PROXY_PORT` | порт локального proxy-сервера | сервер (локально) |
+| `VITE_GIGACHAT_API_URL` | базовый URL для запросов клиента | клиент |
+
+## Тесты
+
+```bash
+npm test
+```
+
+Покрытие:
+- unit-тесты на reducer;
+- компонентные тесты для `InputArea`, `Message`, `Sidebar`;
+- тесты на персистентность `localStorage`.
+
+## Анализ бандла
+
+```bash
+npm run analyze
+```
+
+Скриншот визуализатора бандла: [docs/bundle-analysis.png](docs/bundle-analysis.png)
 
 ## Сертификаты
 
@@ -72,13 +94,9 @@ NODE_TLS_REJECT_UNAUTHORIZED=0 npm run dev:api
 npm run dev
 ```
 
-## Тесты
+## Деплой
 
-```bash
-npm test
-```
-
-Покрытие:
-- unit-тесты на reducer;
-- компонентные тесты для `InputArea`, `Message`, `Sidebar`;
-- тесты на персистентность `localStorage`.
+- Хостинг: Vercel.
+- Переменные окружения задаются в настройках хостинга, ключи не хранятся в коде.
+- API работает через serverless-роут [api/chat/completions.js](api/chat/completions.js).
+- Для React Router настроен SPA-редирект: [vercel.json](vercel.json).

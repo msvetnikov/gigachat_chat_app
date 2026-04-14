@@ -14,6 +14,8 @@ export interface ChatCompletionPayload {
     stream?: boolean;
 }
 
+const API_BASE_URL = import.meta.env.VITE_GIGACHAT_API_URL ?? '/api';
+
 const extractContent = (data: any): string => {
     const choice = data?.choices?.[0];
     return (
@@ -28,7 +30,7 @@ export const createChatCompletion = async (
     payload: ChatCompletionPayload,
     signal?: AbortSignal
 ): Promise<string> => {
-    const response = await fetch('/api/chat/completions', {
+    const response = await fetch(`${API_BASE_URL}/chat/completions`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -50,7 +52,7 @@ export const streamChatCompletion = async (
     onDelta: (chunk: string) => void,
     signal?: AbortSignal
 ) => {
-    const response = await fetch('/api/chat/completions', {
+    const response = await fetch(`${API_BASE_URL}/chat/completions`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
