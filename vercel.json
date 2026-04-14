@@ -4,5 +4,14 @@
             "source": "/chat/:path*",
             "destination": "/"
         }
-    ]
+    ],
+    "functions": {
+        "api/chat/completions.js": {
+            "regions": [
+                "arn1",
+                "fra1"
+            ],
+            "maxDuration": 30
+        }
+    }
 }
