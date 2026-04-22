@@ -219,7 +219,7 @@ export function ChatProvider({
     const lastUserMessageRef = useRef<{ text: string; imageUrl?: string }>({ text: '' });
     const [isHydrated, setIsHydrated] = useState(false);
     const [settings, setSettings] = useState<SettingsValues>({
-        model,
+        model: model as SettingsValues['model'], // Добавили "as SettingsValues['model']",
         systemPrompt,
         temperature,
         topP,

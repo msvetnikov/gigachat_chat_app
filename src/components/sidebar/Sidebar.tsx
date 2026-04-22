@@ -22,20 +22,29 @@ export function Sidebar({
     const [activeModalChatId, setActiveModalChatId] = useState<string | null>(null);
     const [draftTitle, setDraftTitle] = useState('');
 
-    const filteredChats = useMemo(() => {
-        const query = searchValue.trim().toLowerCase();
-        if (!query) {
-            return chats;
-        }
+const filteredChats = useMemo(() => {
+    const query = searchValue.trim().toLowerCase();
+    if (!query) {
+        return chats;
+    }
 
-        return chats.filter((chat) => {
-            const lastMessage = chat.messages[chat.messages.length - 1]?.content ?? '';
-            return (
-                chat.title.toLowerCase().includes(query) ||
-                lastMessage.toLowerCase().includes(query)
-            );
-        });
-    }, [chats, searchValue]);
+    return chats.filter((chat) => {
+        const lastMessage = chat.messages[chat.messages.length - 1]?.content ?? '';
+        
+        // Превращаем контент в строку, прежде чем делать toLowerCase()
+        const lastMessageText = typeof lastMessage === 'string' 
+            ? lastMessage 
+            : lastMessage
+                .filter((part): part is { type: 'text'; text: string } => 'text' in part)
+                .map(part => part.text)
+                .join(' ');
+
+        return (
+            chat.title.toLowerCase().includes(query) ||
+            lastMessageText.toLowerCase().includes(query)
+        );
+    });
+}, [chats, searchValue]);
 
     const handleNewChat = useCallback(() => {
         const chatId = createChat();
