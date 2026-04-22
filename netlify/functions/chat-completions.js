@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto';
-
 const AUTH_KEY = process.env.GIGACHAT_AUTH_KEY ?? '';
 const SCOPE = process.env.GIGACHAT_SCOPE ?? 'GIGACHAT_API_PERS';
 const OAUTH_URL = process.env.GIGACHAT_OAUTH_URL ?? 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth';
@@ -9,6 +7,15 @@ const tokenCache = {
     token: '',
     expiresAt: 0,
 };
+
+const jsonResponse = (statusCode, payload) => ({
+    statusCode,
+    headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+    },
+    body: JSON.stringify(payload),
+});
 
 const fetchAccessToken = async () => {
     const now = Date.now();
@@ -26,7 +33,7 @@ const fetchAccessToken = async () => {
             'Content-Type': 'application/x-www-form-urlencoded',
             Accept: 'application/json',
             Authorization: `Basic ${AUTH_KEY}`,
-            RqUID: randomUUID(),
+            RqUID: crypto.randomUUID(),
         },
         body: new URLSearchParams({ scope: SCOPE }),
     });
@@ -50,13 +57,27 @@ const fetchAccessToken = async () => {
     return token;
 };
 
-export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        res.status(405).json({ error: 'Method not allowed' });
-        return;
+export const handler = async (event) => {
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 204,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            },
+            body: '',
+        };
+    }
+
+    if (event.httpMethod !== 'POST') {
+        return jsonResponse(405, { error: 'Method Not Allowed' });
     }
 
     try {
+        const payload = event.body ? JSON.parse(event.body) : {};
+        payload.stream = false;
+
         const token = await fetchAccessToken();
         const upstream = await fetch(`${API_URL}/chat/completions`, {
             method: 'POST',
@@ -65,22 +86,30 @@ export default async function handler(req, res) {
                 Accept: 'application/json',
                 Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(req.body ?? {}),
+            body: JSON.stringify(payload),
         });
 
+        const responseText = await upstream.text();
         if (!upstream.ok) {
-            const errorBody = await upstream.text();
-            res.status(upstream.status).send(errorBody);
-            return;
+            return {
+                statusCode: upstream.status,
+                headers: {
+                    'Content-Type': upstream.headers.get('content-type') ?? 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                },
+                body: responseText,
+            };
         }
 
-        const responseBody = await upstream.text();
-        const contentType = upstream.headers.get('content-type');
-        if (contentType) {
-            res.setHeader('Content-Type', contentType);
-        }
-        res.status(upstream.status).send(responseBody);
+        return {
+            statusCode: upstream.status,
+            headers: {
+                'Content-Type': upstream.headers.get('content-type') ?? 'application/json',
+                'Access-Control-Allow-Origin': '*',
+            },
+            body: responseText,
+        };
     } catch (error) {
-        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+        return jsonResponse(500, { error: error instanceof Error ? error.message : 'Unknown error' });
     }
-}
+};

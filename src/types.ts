@@ -15,10 +15,16 @@ export type MessageVariant = 'user' | 'assistant';
 
 export type MessageRole = 'system' | 'user' | 'assistant';
 
+export type MessageContentPart =
+    | { type: 'text'; text: string }
+    | { type: 'image_url'; image_url: { url: string } };
+
+export type MessageContent = string | MessageContentPart[];
+
 export interface Message {
     id: string;
     role: MessageRole;
-    content: string;
+    content: MessageContent;
     timestamp: string;
 }
 
@@ -54,4 +60,5 @@ export interface SettingsValues {
     topP: number;
     maxTokens: number;
     systemPrompt: string;
+    repetitionPenalty: number;
 }

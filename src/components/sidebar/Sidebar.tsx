@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useChat } from '../../app/providers/ChatProvider';
+import { useChats } from '../../hooks/useChats';
 import type { Chat } from '../../types';
 import styles from './Sidebar.module.css';
 
@@ -16,7 +16,7 @@ export function Sidebar({
     onClose,
 }: SidebarProps) {
     const navigate = useNavigate();
-    const { chats, activeChatId, createChat, deleteChat, renameChat, selectChat } = useChat();
+    const { chats, activeChatId, createChat, deleteChat, renameChat, selectChat } = useChats();
     const [searchValue, setSearchValue] = useState('');
     const [modalMode, setModalMode] = useState<ModalMode>(null);
     const [activeModalChatId, setActiveModalChatId] = useState<string | null>(null);

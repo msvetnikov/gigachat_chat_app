@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypePrism from 'rehype-prism-plus';
-import type { Message as MessageType, MessageVariant } from '../../types';
+import type { Message as MessageType, MessageContentPart, MessageVariant } from '../../types';
 import styles from './MessageList.module.css';
 
 interface MessageListProps {
@@ -44,6 +44,17 @@ interface MessageProps {
 export function Message({ message, variant }: MessageProps) {
     const [copied, setCopied] = useState(false);
     const timeoutRef = useRef<number | null>(null);
+    const contentParts: MessageContentPart[] = Array.isArray(message.content)
+        ? message.content
+        : [{ type: 'text', text: message.content }];
+    const textContent = contentParts
+        .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+        .map((part) => part.text)
+        .join(' ');
+    const imageParts = contentParts.filter(
+        (part): part is { type: 'image_url'; image_url: { url: string } } =>
+            part.type === 'image_url'
+    );
 
     useEffect(() => () => {
         if (timeoutRef.current) {
@@ -53,7 +64,7 @@ export function Message({ message, variant }: MessageProps) {
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(message.content);
+            await navigator.clipboard.writeText(textContent);
             setCopied(true);
             if (timeoutRef.current) {
                 window.clearTimeout(timeoutRef.current);
@@ -78,11 +89,25 @@ export function Message({ message, variant }: MessageProps) {
                     <strong>{variant === 'user' ? 'Вы' : 'GigaChat'}</strong>
                     <span>{message.timestamp}</span>
                 </div>
-                <div className={styles.markdown}>
-                    <ReactMarkdown rehypePlugins={[rehypePrism]}>
-                        {message.content}
-                    </ReactMarkdown>
-                </div>
+                {textContent ? (
+                    <div className={styles.markdown}>
+                        <ReactMarkdown rehypePlugins={[rehypePrism]}>
+                            {textContent}
+                        </ReactMarkdown>
+                    </div>
+                ) : null}
+                {imageParts.length ? (
+                    <div className={styles.imageRow}>
+                        {imageParts.map((part, index) => (
+                            <img
+                                alt="Вложение"
+                                className={styles.image}
+                                key={`${message.id}-img-${index}`}
+                                src={part.image_url.url}
+                            />
+                        ))}
+                    </div>
+                ) : null}
             </div>
 
             {variant === 'assistant' ? (

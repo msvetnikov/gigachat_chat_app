@@ -1,6 +1,18 @@
-import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEventHandler } from 'react';
+import {
+    Suspense,
+    lazy,
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+    type ChangeEvent,
+    type KeyboardEventHandler,
+} from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useChat } from '../../app/providers/ChatProvider';
+import { useMessages } from '../../hooks/useMessages';
+import { useStreaming } from '../../hooks/useStreaming';
 import { ErrorBoundary } from '../ErrorBoundary';
 import styles from './ChatWindow.module.css';
 
@@ -16,25 +28,16 @@ export function ChatWindow() {
     const navigate = useNavigate();
     const params = useParams();
     const {
-        activeChat,
         activeChatId,
         error,
-        getChatById,
         isHydrated,
-        isLoading,
         selectChat,
         sendMessage,
         retryLastMessage,
-        stopGeneration,
     } = useChat();
+    const { isLoading, stopGeneration } = useStreaming();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-    const chat = useMemo(() => {
-        if (params.id) {
-            return getChatById(params.id);
-        }
-        return activeChat;
-    }, [params.id, getChatById, activeChat]);
+    const chat = useMessages(params.id);
 
     useEffect(() => {
         if (params.id) {
@@ -49,8 +52,8 @@ export function ChatWindow() {
     }, [params.id, chat, navigate, activeChatId, selectChat, isHydrated]);
 
     const handleSend = useCallback(
-        async (text: string) => {
-            await sendMessage(text);
+        async (payload: string | { text: string; imageUrl?: string }) => {
+            await sendMessage(payload);
         },
         [sendMessage]
     );
@@ -86,14 +89,8 @@ export function ChatWindow() {
             </ErrorBoundary>
 
             <div>
-                <InputArea
-                    isLoading={isLoading}
-                    onSend={handleSend}
-                    onStop={handleStop}
-                />
-                {error ? (
-                    <ErrorMessage message={error} onRetry={retryLastMessage} />
-                ) : null}
+                <InputArea isLoading={isLoading} onSend={handleSend} onStop={handleStop} />
+                {error ? <ErrorMessage message={error} onRetry={retryLastMessage} /> : null}
             </div>
 
             <Suspense fallback={null}>
@@ -105,13 +102,16 @@ export function ChatWindow() {
 
 interface InputAreaProps {
     isLoading?: boolean;
-    onSend: (text: string) => void;
+    onSend: (payload: string | { text: string; imageUrl?: string }) => void;
     onStop: () => void;
 }
 
 export function InputArea({ isLoading, onSend, onStop }: InputAreaProps) {
     const [text, setText] = useState('');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [imageName, setImageName] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     useLayoutEffect(() => {
         const element = textareaRef.current;
@@ -125,57 +125,145 @@ export function InputArea({ isLoading, onSend, onStop }: InputAreaProps) {
         element.style.height = `${Math.min(element.scrollHeight, maxHeight)}px`;
     }, [text]);
 
+    const submitMessage = () => {
+        if (!isLoading && (text.trim() || imageUrl)) {
+            const trimmed = text.trim();
+            const textForSend = trimmed || 'Изображение';
+            if (imageUrl) {
+                onSend({ text: textForSend, imageUrl });
+            } else {
+                onSend(textForSend);
+            }
+            setText('');
+            setImageUrl(null);
+            setImageName('');
+        }
+    };
+
     const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
-
-            if (text.trim() && !isLoading) {
-                onSend(text.trim());
-                setText('');
-            }
+            submitMessage();
         }
     };
 
     const handleSendClick = () => {
-        if (text.trim() && !isLoading) {
-            onSend(text.trim());
-            setText('');
+        submitMessage();
+    };
+
+    const handleAttachClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = typeof reader.result === 'string' ? reader.result : null;
+            if (result) {
+                setImageUrl(result);
+                setImageName(file.name);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemoveImage = () => {
+        setImageUrl(null);
+        setImageName('');
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
         }
     };
 
+    const isSendDisabled = (!text.trim() && !imageUrl) || Boolean(isLoading);
+
     return (
-        <div className={styles.inputWrapper}>
-            <button aria-label="Прикрепить изображение" className={styles.iconButton} type="button" disabled={isLoading}>
-                🖼
-            </button>
+        <div className={styles.inputArea}>
+            <div className={styles.inputWrapper}>
+                <button
+                    aria-label="Прикрепить изображение"
+                    className={styles.iconButton}
+                    type="button"
+                    disabled={isLoading}
+                    onClick={handleAttachClick}
+                >
+                    <svg
+                        aria-hidden="true"
+                        className={styles.iconSvg}
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            d="M7.5 12.5l6.7-6.7a3 3 0 114.2 4.2L9.3 19.1a5 5 0 01-7.1-7.1l9.2-9.2"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.8"
+                            fill="none"
+                        />
+                    </svg>
+                </button>
 
-            <textarea
-                className={styles.textarea}
-                onChange={(event) => setText(event.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Введите сообщение..."
-                ref={textareaRef}
-                rows={1}
-                value={text}
-                disabled={isLoading}
-            />
+                <input
+                    accept="image/*"
+                    className={styles.fileInput}
+                    onChange={handleFileChange}
+                    ref={fileInputRef}
+                    type="file"
+                />
 
-            <div className={styles.actions}>
-                {isLoading ? (
-                    <button className={[styles.button, styles.ghostButton].join(' ')} onClick={onStop} type="button">
-                        Стоп
-                    </button>
-                ) : (
+                <textarea
+                    className={styles.textarea}
+                    onChange={(event) => setText(event.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Введите сообщение..."
+                    ref={textareaRef}
+                    rows={1}
+                    value={text}
+                    disabled={isLoading}
+                />
+
+                <div className={styles.actions}>
+                    {isLoading ? (
+                        <button
+                            className={[styles.button, styles.ghostButton].join(' ')}
+                            onClick={onStop}
+                            type="button"
+                        >
+                            Стоп
+                        </button>
+                    ) : (
+                        <button
+                            className={[styles.button, styles.primaryButton].join(' ')}
+                            disabled={isSendDisabled}
+                            onClick={handleSendClick}
+                            type="button"
+                        >
+                            Отправить
+                        </button>
+                    )}
+                </div>
+            </div>
+            {imageUrl ? (
+                <div className={styles.previewRow}>
+                    <img
+                        alt={imageName || 'Выбранное изображение'}
+                        className={styles.previewImage}
+                        src={imageUrl}
+                    />
                     <button
-                        className={[styles.button, styles.primaryButton].join(' ')}
-                        disabled={!text.trim()}
-                        onClick={handleSendClick}
+                        className={[styles.button, styles.ghostButton].join(' ')}
+                        onClick={handleRemoveImage}
                         type="button"
                     >
-                        Отправить
+                        Удалить
                     </button>
-                )}
-            </div>
+                </div>
+            ) : null}
         </div>
     );
 }
@@ -201,7 +289,11 @@ function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
             <span>⚠</span>
             <span>{message}</span>
             {onRetry ? (
-                <button className={[styles.button, styles.ghostButton].join(' ')} onClick={onRetry} type="button">
+                <button
+                    className={[styles.button, styles.ghostButton].join(' ')}
+                    onClick={onRetry}
+                    type="button"
+                >
                     Повторить
                 </button>
             ) : null}
@@ -210,9 +302,5 @@ function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
 }
 
 function MessageListFallback() {
-    return (
-        <div className={styles.messageFallback}>
-            Загрузка сообщений...
-        </div>
-    );
+    return <div className={styles.messageFallback}>Загрузка сообщений...</div>;
 }

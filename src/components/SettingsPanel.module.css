@@ -2,9 +2,11 @@
     position: fixed;
     inset: 0;
     z-index: 40;
-    display: grid;
-    place-items: center;
-    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 24px 16px;
+    overflow-y: auto;
 }
 
 .backdrop {
@@ -17,13 +19,21 @@
     position: relative;
     z-index: 1;
     width: min(100%, 420px);
+    max-height: calc(100vh - 48px);
     padding: 22px;
     border: 1px solid var(--color-border);
     border-radius: 20px;
-    background: var(--color-surface);
+    background: var(--color-bg-elevated);
     box-shadow: var(--shadow-soft);
     display: grid;
     gap: 16px;
+    overflow-y: auto;
+}
+
+@media (min-width: 901px) {
+    .overlay {
+        align-items: center;
+    }
 }
 
 .title {
@@ -33,6 +43,34 @@
 .text {
     margin: 0;
     color: var(--color-text-muted);
+}
+
+.field {
+    display: grid;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.helper {
+    color: var(--color-text-muted);
+    font-weight: 400;
+    font-size: 0.85rem;
+}
+
+.input,
+.textarea,
+.range {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-bg-elevated);
+    color: var(--color-text);
+    font: inherit;
+}
+
+.textarea {
+    resize: vertical;
 }
 
 .actions {

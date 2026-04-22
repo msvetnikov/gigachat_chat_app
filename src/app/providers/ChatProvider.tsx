@@ -11,7 +11,16 @@ import {
 } from 'react';
 import { createChatCompletion, streamChatCompletion } from '../../api/gigachat';
 import { loadChatState, saveChatState } from '../../utils/storage';
-import type { Chat, ChatAction, ChatState, Message, MessageRole } from '../../types';
+import type {
+    Chat,
+    ChatAction,
+    ChatState,
+    Message,
+    MessageContent,
+    MessageContentPart,
+    MessageRole,
+    SettingsValues,
+} from '../../types';
 
 const createId = () =>
     globalThis.crypto?.randomUUID?.() ?? `id-${Date.now()}-${Math.random()}`;
@@ -24,16 +33,27 @@ const formatDate = () =>
 
 const DEFAULT_TITLE = 'Новый чат';
 
-const buildTitleFromMessage = (content: string) => {
-    const trimmed = content.trim();
+const getTextFromContent = (content: MessageContent) => {
+    if (typeof content === 'string') {
+        return content;
+    }
+
+    return content
+        .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+        .map((part) => part.text)
+        .join(' ');
+};
+
+const buildTitleFromMessage = (content: MessageContent) => {
+    const trimmed = getTextFromContent(content).trim();
     if (trimmed.length < 3) {
         return DEFAULT_TITLE;
     }
     return trimmed.length > 40 ? `${trimmed.slice(0, 40)}…` : trimmed;
 };
 
-const buildPreview = (content: string) => {
-    const trimmed = content.trim();
+const buildPreview = (content: MessageContent) => {
+    const trimmed = getTextFromContent(content).trim();
     if (!trimmed) {
         return '';
     }
@@ -158,11 +178,13 @@ export const chatReducer = (state: ChatState, action: ChatAction): ChatState => 
 interface ChatContextValue extends ChatState {
     isHydrated: boolean;
     activeChat: Chat | null;
+    settings: SettingsValues;
+    updateSettings: (settings: Partial<SettingsValues>) => void;
     createChat: () => string;
     selectChat: (chatId: string) => void;
     deleteChat: (chatId: string) => void;
     renameChat: (chatId: string, title: string) => void;
-    sendMessage: (text: string) => Promise<void>;
+    sendMessage: (payload: string | { text: string; imageUrl?: string }) => Promise<void>;
     retryLastMessage: () => Promise<void>;
     stopGeneration: () => void;
     getChatById: (chatId: string) => Chat | null;
@@ -177,6 +199,7 @@ interface ChatProviderProps {
     temperature: number;
     topP: number;
     maxTokens: number;
+    repetitionPenalty?: number;
     enableStreaming?: boolean;
 }
 
@@ -187,13 +210,22 @@ export function ChatProvider({
     temperature,
     topP,
     maxTokens,
+    repetitionPenalty = 1,
     enableStreaming = true,
 }: ChatProviderProps) {
     const [state, dispatch] = useReducer(chatReducer, initialState);
     const stateRef = useRef(state);
     const abortRef = useRef<AbortController | null>(null);
-    const lastUserMessageRef = useRef('');
+    const lastUserMessageRef = useRef<{ text: string; imageUrl?: string }>({ text: '' });
     const [isHydrated, setIsHydrated] = useState(false);
+    const [settings, setSettings] = useState<SettingsValues>({
+        model,
+        systemPrompt,
+        temperature,
+        topP,
+        maxTokens,
+        repetitionPenalty,
+    });
 
     useEffect(() => {
         stateRef.current = state;
@@ -251,13 +283,17 @@ export function ChatProvider({
     }, []);
 
     const sendMessage = useCallback(
-        async (text: string) => {
-            const trimmed = text.trim();
+        async (payload: string | { text: string; imageUrl?: string }) => {
+            const normalized =
+                typeof payload === 'string'
+                    ? { text: payload, imageUrl: undefined }
+                    : payload;
+            const trimmed = normalized.text.trim();
             if (!trimmed || stateRef.current.isLoading) {
                 return;
             }
 
-            lastUserMessageRef.current = trimmed;
+            lastUserMessageRef.current = normalized;
 
             let chat = stateRef.current.chats.find(
                 (item) => item.id === stateRef.current.activeChatId
@@ -269,10 +305,17 @@ export function ChatProvider({
             }
 
             const chatId = chat.id;
+            const content: MessageContent = normalized.imageUrl
+                ? ([
+                    { type: 'text', text: trimmed },
+                    { type: 'image_url', image_url: { url: normalized.imageUrl } },
+                ] satisfies MessageContentPart[])
+                : trimmed;
+
             const userMessage: Message = {
                 id: createId(),
                 role: 'user',
-                content: trimmed,
+                content,
                 timestamp: formatTimestamp(),
             };
 
@@ -295,12 +338,12 @@ export function ChatProvider({
                 },
             });
 
-            const prompt = systemPrompt.trim();
+            const prompt = settings.systemPrompt.trim();
             const requestMessages = [
                 ...(prompt
                     ? ([{ role: 'system', content: prompt }] as Array<{
                         role: MessageRole;
-                        content: string;
+                        content: string | MessageContentPart[];
                     }>)
                     : []),
                 ...[...chat.messages, userMessage].map((message) => ({
@@ -324,11 +367,12 @@ export function ChatProvider({
                     let aggregated = '';
                     await streamChatCompletion(
                         {
-                            model,
+                            model: settings.model,
                             messages: requestMessages,
-                            temperature,
-                            top_p: topP,
-                            max_tokens: maxTokens,
+                            temperature: settings.temperature,
+                            top_p: settings.topP,
+                            max_tokens: settings.maxTokens,
+                            repetition_penalty: settings.repetitionPenalty,
                             stream: true,
                         },
                         (delta) => {
@@ -340,11 +384,12 @@ export function ChatProvider({
                 } else {
                     const content = await createChatCompletion(
                         {
-                            model,
+                            model: settings.model,
                             messages: requestMessages,
-                            temperature,
-                            top_p: topP,
-                            max_tokens: maxTokens,
+                            temperature: settings.temperature,
+                            top_p: settings.topP,
+                            max_tokens: settings.maxTokens,
+                            repetition_penalty: settings.repetitionPenalty,
                         },
                         controller.signal
                     );
@@ -355,11 +400,12 @@ export function ChatProvider({
                     try {
                         const content = await createChatCompletion(
                             {
-                                model,
+                                model: settings.model,
                                 messages: requestMessages,
-                                temperature,
-                                top_p: topP,
-                                max_tokens: maxTokens,
+                                temperature: settings.temperature,
+                                top_p: settings.topP,
+                                max_tokens: settings.maxTokens,
+                                repetition_penalty: settings.repetitionPenalty,
                             },
                             controller.signal
                         );
@@ -372,22 +418,28 @@ export function ChatProvider({
                 dispatch({ type: 'SET_LOADING', payload: false });
             }
         },
-        [enableStreaming, maxTokens, model, systemPrompt, temperature, topP]
+        [enableStreaming, settings]
     );
 
     const retryLastMessage = useCallback(async () => {
         const lastMessage = lastUserMessageRef.current;
-        if (!lastMessage) {
+        if (!lastMessage.text) {
             return;
         }
 
         await sendMessage(lastMessage);
     }, [sendMessage]);
 
+    const updateSettings = useCallback((nextSettings: Partial<SettingsValues>) => {
+        setSettings((current) => ({ ...current, ...nextSettings }));
+    }, []);
+
     const value: ChatContextValue = {
         ...state,
         isHydrated,
         activeChat,
+        settings,
+        updateSettings,
         createChat,
         selectChat,
         deleteChat,

@@ -1,8 +1,12 @@
 export type ChatCompletionRole = 'system' | 'user' | 'assistant';
 
+export type ChatCompletionContentPart =
+    | { type: 'text'; text: string }
+    | { type: 'image_url'; image_url: { url: string } };
+
 export interface ChatCompletionMessage {
     role: ChatCompletionRole;
-    content: string;
+    content: string | ChatCompletionContentPart[];
 }
 
 export interface ChatCompletionPayload {
@@ -11,7 +15,12 @@ export interface ChatCompletionPayload {
     temperature?: number;
     top_p?: number;
     max_tokens?: number;
+    repetition_penalty?: number;
     stream?: boolean;
+}
+
+export interface ModelListResponse {
+    data?: Array<{ id: string }>;
 }
 
 const API_BASE_URL = import.meta.env.VITE_GIGACHAT_API_URL ?? '/api';
@@ -101,4 +110,21 @@ export const streamChatCompletion = async (
             }
         }
     }
+};
+
+export const fetchModels = async (signal?: AbortSignal): Promise<string[]> => {
+    const response = await fetch(`${API_BASE_URL}/models`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        signal,
+    });
+
+    if (!response.ok) {
+        throw new Error(`GigaChat API error: ${response.status}`);
+    }
+
+    const data = (await response.json()) as ModelListResponse;
+    return data?.data?.map((item) => item.id).filter(Boolean) ?? [];
 };

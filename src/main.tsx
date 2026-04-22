@@ -11,7 +11,10 @@ const DEFAULT_SETTINGS = {
     temperature: 0.7,
     topP: 0.9,
     maxTokens: 2048,
+    repetitionPenalty: 1,
 };
+
+const ENABLE_STREAMING = import.meta.env.VITE_GIGACHAT_STREAMING !== 'false';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
@@ -21,6 +24,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             temperature={DEFAULT_SETTINGS.temperature}
             topP={DEFAULT_SETTINGS.topP}
             maxTokens={DEFAULT_SETTINGS.maxTokens}
+            repetitionPenalty={DEFAULT_SETTINGS.repetitionPenalty}
+            enableStreaming={ENABLE_STREAMING}
         >
             <AppRoutes />
         </ChatProvider>

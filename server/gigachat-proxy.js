@@ -20,7 +20,7 @@ const tokenCache = {
 const withCors = (res, origin) => {
     res.setHeader('Access-Control-Allow-Origin', origin ?? '*');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
 };
 
 const readRequestBody = (req) =>
@@ -85,26 +85,32 @@ const server = createServer(async (req, res) => {
 
     const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
 
-    if (req.method !== 'POST' || url.pathname !== '/api/chat/completions') {
+    const isChatCompletions = url.pathname === '/api/chat/completions';
+    const isModels = url.pathname === '/api/models';
+
+    if (!((req.method === 'POST' && isChatCompletions) || (req.method === 'GET' && isModels))) {
         res.statusCode = 404;
         res.end('Not found');
         return;
     }
 
     try {
-        const rawBody = await readRequestBody(req);
+        const rawBody = req.method === 'POST' ? await readRequestBody(req) : '';
         const payload = rawBody ? JSON.parse(rawBody) : {};
         const token = await fetchAccessToken();
 
-        const upstream = await fetch(`${API_URL}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(payload),
-        });
+        const upstream = await fetch(
+            isModels ? `${API_URL}/models` : `${API_URL}/chat/completions`,
+            {
+                method: isModels ? 'GET' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: isModels ? undefined : JSON.stringify(payload),
+            }
+        );
 
         if (!upstream.ok) {
             res.statusCode = upstream.status;
@@ -115,7 +121,7 @@ const server = createServer(async (req, res) => {
             return;
         }
 
-        const isStream = Boolean(payload?.stream);
+        const isStream = !isModels && Boolean(payload?.stream);
         if (isStream && upstream.body) {
             res.statusCode = upstream.status;
             res.setHeader('Content-Type', upstream.headers.get('content-type') ?? 'text/event-stream');

@@ -90,6 +90,20 @@
     background: var(--color-bg);
 }
 
+.imageRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.image {
+    width: min(220px, 60vw);
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    object-fit: cover;
+}
+
 .copyButton {
     align-self: center;
     padding: 8px 10px;
