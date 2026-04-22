@@ -73,6 +73,7 @@ export const initialState: ChatState = {
     activeChatId: '',
     isLoading: false,
     error: null,
+    notice: null,
 };
 
 export const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
@@ -170,6 +171,11 @@ export const chatReducer = (state: ChatState, action: ChatAction): ChatState => 
                 ...state,
                 error: action.payload,
             };
+        case 'SET_NOTICE':
+            return {
+                ...state,
+                notice: action.payload,
+            };
         default:
             return state;
     }
@@ -216,6 +222,7 @@ export function ChatProvider({
     const [state, dispatch] = useReducer(chatReducer, initialState);
     const stateRef = useRef(state);
     const abortRef = useRef<AbortController | null>(null);
+    const noticeTimeoutRef = useRef<number | null>(null);
     const lastUserMessageRef = useRef<{ text: string; imageUrl?: string }>({ text: '' });
     const [isHydrated, setIsHydrated] = useState(false);
     const [settings, setSettings] = useState<SettingsValues>({
@@ -280,6 +287,14 @@ export function ChatProvider({
     const stopGeneration = useCallback(() => {
         abortRef.current?.abort();
         dispatch({ type: 'SET_LOADING', payload: false });
+        dispatch({ type: 'SET_ERROR', payload: null });
+        dispatch({ type: 'SET_NOTICE', payload: 'Вы остановили запрос.' });
+        if (noticeTimeoutRef.current) {
+            window.clearTimeout(noticeTimeoutRef.current);
+        }
+        noticeTimeoutRef.current = window.setTimeout(() => {
+            dispatch({ type: 'SET_NOTICE', payload: null });
+        }, 2500);
     }, []);
 
     const sendMessage = useCallback(
@@ -322,6 +337,11 @@ export function ChatProvider({
             dispatch({ type: 'ADD_MESSAGE', payload: { chatId, message: userMessage } });
 
             dispatch({ type: 'SET_ERROR', payload: null });
+            dispatch({ type: 'SET_NOTICE', payload: null });
+            if (noticeTimeoutRef.current) {
+                window.clearTimeout(noticeTimeoutRef.current);
+                noticeTimeoutRef.current = null;
+            }
             dispatch({ type: 'SET_LOADING', payload: true });
 
             const assistantMessageId = createId();
@@ -396,6 +416,10 @@ export function ChatProvider({
                     updateAssistant(content);
                 }
             } catch (error) {
+                if (controller.signal.aborted) {
+                    return;
+                }
+
                 if ((error as Error).name !== 'AbortError') {
                     try {
                         const content = await createChatCompletion(

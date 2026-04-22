@@ -41,6 +41,7 @@ export interface ChatState {
     activeChatId: string;
     isLoading: boolean;
     error: string | null;
+    notice: string | null;
 }
 
 export type ChatAction =
@@ -52,7 +53,8 @@ export type ChatAction =
     | { type: 'ADD_MESSAGE'; payload: { chatId: string; message: Message } }
     | { type: 'UPDATE_MESSAGE'; payload: { chatId: string; messageId: string; content: string } }
     | { type: 'SET_LOADING'; payload: boolean }
-    | { type: 'SET_ERROR'; payload: string | null };
+    | { type: 'SET_ERROR'; payload: string | null }
+    | { type: 'SET_NOTICE'; payload: string | null };
 
 export interface SettingsValues {
     model: ModelOption;

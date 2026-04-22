@@ -30,6 +30,7 @@ export function ChatWindow() {
     const {
         activeChatId,
         error,
+        notice,
         isHydrated,
         selectChat,
         sendMessage,
@@ -91,6 +92,7 @@ export function ChatWindow() {
             <div>
                 <InputArea isLoading={isLoading} onSend={handleSend} onStop={handleStop} />
                 {error ? <ErrorMessage message={error} onRetry={retryLastMessage} /> : null}
+                {!error && notice ? <NoticeMessage message={notice} /> : null}
             </div>
 
             <Suspense fallback={null}>
@@ -297,6 +299,19 @@ function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
                     Повторить
                 </button>
             ) : null}
+        </div>
+    );
+}
+
+interface NoticeMessageProps {
+    message: string;
+}
+
+function NoticeMessage({ message }: NoticeMessageProps) {
+    return (
+        <div className={styles.noticeMessage} role="status">
+            <span>ℹ</span>
+            <span>{message}</span>
         </div>
     );
 }

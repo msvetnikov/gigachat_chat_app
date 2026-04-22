@@ -43,6 +43,18 @@
     color: #c52d2d;
 }
 
+.noticeMessage {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    margin: 0 24px 20px;
+    padding: 10px 12px;
+    border: 1px solid rgba(96, 112, 137, 0.22);
+    border-radius: 14px;
+    background: rgba(96, 112, 137, 0.12);
+    color: var(--color-text-muted);
+}
+
 .messageFallback {
     padding: 24px;
     color: var(--color-text-muted);
