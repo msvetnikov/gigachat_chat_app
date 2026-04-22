@@ -2,12 +2,14 @@ import { useMemo } from 'react';
 import { useChat } from '../app/providers/ChatProvider';
 
 export const useMessages = (chatId?: string) => {
-    const { activeChat, getChatById } = useChat();
+    // Берем актуальный массив chats напрямую из провайдера
+    const { activeChat, chats } = useChat();
 
     return useMemo(() => {
         if (chatId) {
-            return getChatById(chatId);
+            // Ищем чат в "живом" массиве, а не через Ref
+            return chats.find((chat) => chat.id === chatId) ?? null;
         }
         return activeChat;
-    }, [activeChat, chatId, getChatById]);
+    }, [activeChat, chatId, chats]);
 };
