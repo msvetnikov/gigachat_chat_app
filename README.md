@@ -4,8 +4,11 @@
 
 ## Демо
 
-- Публичная ссылка: https://app.netlify.com/projects/gigachat-app-chat/overview
-- Скриншоты: добавить после деплоя.
+- Публичная ссылка: https://gigachat-app-chat.netlify.app/
+- Видеодемонстрация:
+
+https://github.com/user-attachments/assets/fc41b60f-93d0-499f-a68a-324978c901e2
+
 
 ## Стек
 
@@ -20,32 +23,32 @@
 
 ## Запуск локально
 
-1. Клонируйте репозиторий:
+#### 1. Клонируйте репозиторий:
 
 ```bash
 git clone https://github.com/msvetnikov/gigachat_chat_app
 ```
 
-2. Перейдите в папку проекта:
+#### 2. Перейдите в папку проекта:
 
 ```bash
 cd gigachat_chat_app
 ```
 
-3. Установите зависимости:
+#### 3. Установите зависимости:
 
 ```bash
 npm install
 ```
 
-4. Создайте .env в корне проекта по образцу .env.example и заполните значения.
-5. Запустите proxy-сервер в одном терминале:
+#### 4. Создайте .env в корне проекта по образцу .env.example и заполните значения.
+#### 5. Запустите proxy-сервер в одном терминале:
 
 ```bash
 npm run dev:api
 ```
 
-6. Запустите Vite во втором терминале:
+#### 6. Запустите Vite во втором терминале:
 
 ```bash
 npm run dev
@@ -53,13 +56,15 @@ npm run dev
 
 Откройте URL из вывода Vite (например, http://localhost:5174).
 
-Для работы с API нужны корневые сертификаты НУЦ Минцифры. Если они не установлены, запускайте через скрипт:
+Для работы с API нужны корневые сертификаты НУЦ Минцифры. Если они не установлены, запускайте через скрипт (менее безопасно):
+
+Windows:
 
 ```bash
 scripts\dev-with-tls.cmd
 ```
 
-macOS / Linux без сертификатов (менее безопасно):
+macOS / Linux:
 
 ```bash
 NODE_TLS_REJECT_UNAUTHORIZED=0 npm run dev:api
@@ -77,5 +82,3 @@ npm run dev
 | GIGACHAT_PROXY_PORT | порт локального proxy-сервера | сервер (локально) |
 | VITE_GIGACHAT_API_URL | базовый URL для запросов клиента | клиент |
 | VITE_GIGACHAT_STREAMING | включает streaming-режим (true/false) | клиент |
-
-
